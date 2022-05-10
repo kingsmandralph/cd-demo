@@ -1,7 +1,7 @@
 pipeline{
     agent any
     parameters {
-      string defaultValue: 'dev', description: 'environment', name: 'ENV', trim: true
+	  choice choices: ['UAT', 'PERFORMACE', 'PROD'], description: 'Target environment', name: 'TARGET_ENV'
     }
 	tools {
         maven 'maven-3.6.3'
@@ -13,25 +13,29 @@ pipeline{
                 script{
                     cleanWs()
                     println("Preparing job with variables")
-                    println("deploying in ${ENV}")
+                    println("deploying in ${TARGET_ENV}")
                     currentBuild.displayName = "#${BUILD_NUMBER} Started by ${currentBuild.getBuildCauses()[0].userId}"
-                    currentBuild.description = """Target Env is: ${ENV} """
+                    currentBuild.description = """Target Env is: ${TARGET_ENV} """
                 }
             }
         }
         stage('download jar from s3') {
             steps{
-		        script{                   
+		script{                   
                     withAWS(credentials: 'my-cba-aws-credential', region: 'eu-west-2') {
                         sh '''echo "Downloading jar from s3 for deployment to ${ENV}" '''
                         s3Download bucket: 'document-ak', file: 'myproject.jar', path: 'ci-demo/javaapp/myapp.jar'
                     }
-		        }
-		    }
+		 }
+             }
         }
         stage('maven deploy') {
             steps {
-		        script{
+		 script{
+			if(TARGET_ENV == 'PROD'){
+			    input('Do you want to proceed deployment to production?')
+			}
+			 
 	                println("Deploying....\nMaven deploy...." )
 	                echo"""mvn deploy:deploy-file -DgroupId=<group-id> \
                           -DartifactId=myapp.jar \
@@ -48,6 +52,7 @@ pipeline{
         always{
                 script{  
                     echo  '''this is always executed '''
+		    cleanWs()
             }
         }
     }
