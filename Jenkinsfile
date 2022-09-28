@@ -4,8 +4,8 @@ pipeline{
 	  choice choices: ['UAT', 'PERFORMACE', 'PROD'], description: 'Target environment', name: 'TARGET_ENV'
     }
 	tools {
-        maven 'maven-3.6.3'
-        jdk 'jdk8'
+        maven 'cba-maven-3.6.3'
+        jdk 'cba-jdk8'
     }
     stages{
         stage('init'){
@@ -22,9 +22,9 @@ pipeline{
         stage('download jar from s3') {
             steps{
 		script{                   
-                    withAWS(credentials: 'my-cba-aws-credential', region: 'eu-west-2') {
+                    withAWS(credentials: '318867684519', region: 'eu-west-2') {
                         sh '''echo "Downloading jar from s3 for deployment to ${ENV}" '''
-                        s3Download bucket: 'document-ak', file: 'myproject.jar', path: 'ci-demo/javaapp/myapp.jar'
+                        s3Download bucket: 'document-ekene', file: 'myproject.jar', path: 'ci-demo/javaapp/myapp.jar'
                     }
 		 }
              }
